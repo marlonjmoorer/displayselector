@@ -10,6 +10,61 @@ namespace DisplaySelector
 {
     public static class ScreenRotator
     {
+        static DEVMODE mainDevice;
+        static DEVMODE remoteDevice;
+        static string remoteDisplayName;
+
+        static ScreenRotator()
+        {
+            DISPLAY_DEVICE display = new DISPLAY_DEVICE();
+            display.cb = Marshal.SizeOf(display);
+
+            for (uint id = 0; NativeMethods.EnumDisplayDevices(null, id, ref display, 0); id++)
+            {
+                if (display.StateFlags.HasFlag(DisplayDeviceStateFlags.AttachedToDesktop))
+                {
+                    if (id == 0)
+                    {
+                        mainDevice=getDeviceByName(display.DeviceName);
+                    }
+                    else
+                    {
+                        remoteDevice = getDeviceByName(display.DeviceName);
+                        remoteDisplayName = display.DeviceName;
+                        break;
+                    }
+                }
+            }
+          
+        }
+
+
+        static DEVMODE getDeviceByName(string name)
+        {
+            DEVMODE deviceMode = new DEVMODE();
+            if (0 != NativeMethods.EnumDisplaySettings(name, NativeMethods.ENUM_CURRENT_SETTINGS, ref deviceMode))
+            {
+                return deviceMode;
+            }
+            else
+            {
+                throw new Exception("Devicenot found");
+            }
+        }
+
+        static void adjustScreenSize(ref DEVMODE deviceMode,DisplayOrientation orientation)
+        {
+
+            if (deviceMode.dmDisplayOrientation + (int)orientation % 2 >0)
+            {
+                // swap width and height
+                int temp = deviceMode.dmPelsHeight;
+                deviceMode.dmPelsHeight = deviceMode.dmPelsWidth;
+                deviceMode.dmPelsWidth = temp;
+            }
+
+            deviceMode.dmDisplayOrientation = (int)orientation;
+        }
 
         public static void Rotate(RotationStates state)
         {
@@ -43,8 +98,6 @@ namespace DisplaySelector
 
 
                 case RotationStates.MODE_LAYFLAT:
-                    orientation_main = orientation_cast = DisplayOrientation.LANDSCAPE_FLIPPED;
-                    break;
                 default:
                     return;
             }
@@ -55,55 +108,34 @@ namespace DisplaySelector
            
         }
 
+        public static void RotateMain()
+        {
+            int value=(mainDevice.dmDisplayOrientation + 1)%4;
+            DisplayOrientation orientation = (DisplayOrientation)value;
+            adjustScreenSize(ref mainDevice, orientation);
+            NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
+        }
+        public static void RotateRemote()
+        {
+            int value = (remoteDevice.dmDisplayOrientation + 1) % 4;
+            DisplayOrientation orientation = (DisplayOrientation)value;
+            adjustScreenSize(ref remoteDevice, orientation);
+            NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+        }
         
         static void SetOrientation(DisplayOrientation main,DisplayOrientation cast)
         {
-            DISPLAY_DEVICE display = new DISPLAY_DEVICE();
-            string mainDisplayName = "_", castDisplayName ="_" ;
+               
 
-            display.cb = Marshal.SizeOf(display);
-
-            for (uint id = 0; NativeMethods.EnumDisplayDevices(null, id, ref display, 0); id++)
-            {
-                if (display.StateFlags.HasFlag(DisplayDeviceStateFlags.AttachedToDesktop))
-                {
-                    if(id == 0)
-                    {
-                        mainDisplayName = display.DeviceName;
-                    }
-                    else
-                    {
-                        castDisplayName = display.DeviceName;
-                        break;
-                    }
-                }
-            }
-            DEVMODE deviceMode = new DEVMODE();
-            if (0 != NativeMethods.EnumDisplaySettings(mainDisplayName, NativeMethods.ENUM_CURRENT_SETTINGS, ref deviceMode))
-            {
-                // swap width and height
-                int temp = deviceMode.dmPelsHeight;
-                deviceMode.dmPelsHeight = deviceMode.dmPelsWidth;
-                deviceMode.dmPelsWidth = temp;
-                deviceMode.dmDisplayOrientation = NativeMethods.DMDO_180;
-
-               DISP_CHANGE iRet = (DISP_CHANGE)NativeMethods.ChangeDisplaySettings(ref deviceMode, 1);
-
-            }
-            deviceMode = new DEVMODE();
-            if (0 != NativeMethods.EnumDisplaySettings(castDisplayName, NativeMethods.ENUM_CURRENT_SETTINGS, ref deviceMode))
-            {
-                // swap width and height
-                int temp = deviceMode.dmPelsHeight;
-                deviceMode.dmPelsHeight = deviceMode.dmPelsWidth;
-                deviceMode.dmPelsWidth = temp;
-                deviceMode.dmDisplayOrientation = (int)cast;
-
-                DISP_CHANGE iRet =NativeMethods.ChangeDisplaySettingsEx(castDisplayName, ref deviceMode, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
-            }
+               adjustScreenSize(ref mainDevice, main);
+               adjustScreenSize(ref remoteDevice, cast);
+               NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
+               NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+            
 
 
         }
+
 
 
 

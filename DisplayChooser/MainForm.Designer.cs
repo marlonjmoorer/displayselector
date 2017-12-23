@@ -37,6 +37,8 @@
             this.LaptopButton = new System.Windows.Forms.Button();
             this.ModeText = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.RotateMainBtn = new System.Windows.Forms.Button();
+            this.RotateRemoteBtn = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -136,11 +138,35 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Mode";
             // 
+            // RotateMainBtn
+            // 
+            this.RotateMainBtn.Enabled = false;
+            this.RotateMainBtn.Location = new System.Drawing.Point(15, 227);
+            this.RotateMainBtn.Name = "RotateMainBtn";
+            this.RotateMainBtn.Size = new System.Drawing.Size(140, 23);
+            this.RotateMainBtn.TabIndex = 3;
+            this.RotateMainBtn.Text = "Rotate Main";
+            this.RotateMainBtn.UseVisualStyleBackColor = true;
+            this.RotateMainBtn.Click += new System.EventHandler(this.RotateMainBtn_Click);
+            // 
+            // RotateRemoteBtn
+            // 
+            this.RotateRemoteBtn.Enabled = false;
+            this.RotateRemoteBtn.Location = new System.Drawing.Point(186, 227);
+            this.RotateRemoteBtn.Name = "RotateRemoteBtn";
+            this.RotateRemoteBtn.Size = new System.Drawing.Size(144, 23);
+            this.RotateRemoteBtn.TabIndex = 4;
+            this.RotateRemoteBtn.Text = "Rotate Remote";
+            this.RotateRemoteBtn.UseVisualStyleBackColor = true;
+            this.RotateRemoteBtn.Click += new System.EventHandler(this.RotateRemoteBtn_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(348, 232);
+            this.ClientSize = new System.Drawing.Size(348, 262);
+            this.Controls.Add(this.RotateRemoteBtn);
+            this.Controls.Add(this.RotateMainBtn);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.ModeText);
             this.Controls.Add(this.panel1);
@@ -161,6 +187,8 @@
         private System.Windows.Forms.Button LaptopButton;
         private System.Windows.Forms.TextBox ModeText;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button RotateMainBtn;
+        private System.Windows.Forms.Button RotateRemoteBtn;
     }
 }
 

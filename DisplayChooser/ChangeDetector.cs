@@ -44,43 +44,43 @@ namespace DisplaySelector
 
             }
 
-            if (0 != NativeMethods.EnumDisplaySettings(
-            null,
-            NativeMethods.ENUM_CURRENT_SETTINGS,
-            ref dm))
-            {
-                // swap width and height
-                int temp = dm.dmPelsHeight;
-                dm.dmPelsHeight = dm.dmPelsWidth;
-                dm.dmPelsWidth = temp;
+            //if (0 != NativeMethods.EnumDisplaySettings(
+            //null,
+            //NativeMethods.ENUM_CURRENT_SETTINGS,
+            //ref dm))
+            //{
+            //    // swap width and height
+            //    int temp = dm.dmPelsHeight;
+            //    dm.dmPelsHeight = dm.dmPelsWidth;
+            //    dm.dmPelsWidth = temp;
 
-                // determine new orientation
-                switch (dm.dmDisplayOrientation)
-                {
-                    case NativeMethods.DMDO_DEFAULT:
-                        dm.dmDisplayOrientation = NativeMethods.DMDO_180;
-                        break;
-                    case NativeMethods.DMDO_270:
-                        dm.dmDisplayOrientation = NativeMethods.DMDO_180;
-                        break;
-                    case NativeMethods.DMDO_180:
-                        dm.dmDisplayOrientation = NativeMethods.DMDO_90;
-                        break;
-                    case NativeMethods.DMDO_90:
-                       dm.dmDisplayOrientation = NativeMethods.DMDO_DEFAULT;
-                       break;
-                    default:
+            //    // determine new orientation
+            //    switch (dm.dmDisplayOrientation)
+            //    {
+            //        case NativeMethods.DMDO_DEFAULT:
+            //            dm.dmDisplayOrientation = NativeMethods.DMDO_180;
+            //            break;
+            //        case NativeMethods.DMDO_270:
+            //            dm.dmDisplayOrientation = NativeMethods.DMDO_180;
+            //            break;
+            //        case NativeMethods.DMDO_180:
+            //            dm.dmDisplayOrientation = NativeMethods.DMDO_90;
+            //            break;
+            //        case NativeMethods.DMDO_90:
+            //           dm.dmDisplayOrientation = NativeMethods.DMDO_DEFAULT;
+            //           break;
+            //        default:
 
-                        dm.dmDisplayOrientation = NativeMethods.DMDO_DEFAULT;
-                        // unknown orientation value
-                        // add exception handling here
+            //            dm.dmDisplayOrientation = NativeMethods.DMDO_DEFAULT;
+            //            // unknown orientation value
+            //            // add exception handling here
 
-                        break;
-                }
+            //            break;
+            //    }
 
-                int iRet = NativeMethods.ChangeDisplaySettings(ref dm, 0);
+            //    int iRet = NativeMethods.ChangeDisplaySettings(ref dm, 0);
 
-            }
+            //}
 
 
 

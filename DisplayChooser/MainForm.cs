@@ -43,20 +43,28 @@ namespace DisplaySelector
         }
         private void ChangeDisplay(object sender, EventArgs e)
         {
-           RotationStates type;
+           RotationStates state;
             var button = sender as Button;
-           if (button!=null && Enum.TryParse(button.Tag.ToString(),out type))
+           if (button!=null && Enum.TryParse(button.Tag.ToString(),out state))
            {
-                this.displayclient.SetRotationMode((int)type);
+                this.displayclient.SetRotationMode((int)state);
                 this.ModeText.Text = button.Text;
-                //ScreenRotator.Rotate(type);
+                ScreenRotator.Rotate(state);
+                RotateMainBtn.Enabled = RotateRemoteBtn.Enabled = state == RotationStates.MODE_LAYFLAT;
+             //   if(type==RotationStates.MODE_LAYFLAT)
             
            }
            
         }
 
+        private void RotateMainBtn_Click(object sender, EventArgs e)
+        {
+            ScreenRotator.RotateMain();
+        }
 
-
-       
+        private void RotateRemoteBtn_Click(object sender, EventArgs e)
+        {
+            ScreenRotator.RotateRemote();
+        }
     }
 }

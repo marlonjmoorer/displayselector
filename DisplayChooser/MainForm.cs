@@ -25,6 +25,9 @@ namespace DisplaySelector
 
             RegisterService();
 
+           
+
+
         }
 
         void RegisterService()
@@ -37,8 +40,10 @@ namespace DisplaySelector
 
             this.displayclient = new SixModeServiceClient(callbackInstance,tcpBinding,address);
             displayclient.Register();
-           
-          
+
+            this.ModeText.Text = "Laptop";
+            this.displayclient.SetRotationMode((int)RotationStates.MODE_LAPTOP);
+
 
         }
         private void ChangeDisplay(object sender, EventArgs e)
@@ -51,7 +56,7 @@ namespace DisplaySelector
                 this.ModeText.Text = button.Text;
                 ScreenRotator.Rotate(state);
                 RotateMainBtn.Enabled = RotateRemoteBtn.Enabled = state == RotationStates.MODE_LAYFLAT;
-             //   if(type==RotationStates.MODE_LAYFLAT)
+            
             
            }
            

@@ -55,7 +55,7 @@ namespace DisplaySelector
         static void adjustScreenSize(ref DEVMODE deviceMode,DisplayOrientation orientation)
         {
 
-            if (deviceMode.dmDisplayOrientation + (int)orientation % 2 >0)
+            if ((deviceMode.dmDisplayOrientation + (int)orientation) % 2 !=0)
             {
                 // swap width and height
                 int temp = deviceMode.dmPelsHeight;
@@ -89,7 +89,7 @@ namespace DisplaySelector
 
                 case RotationStates.MODE_WEDGE:
                     orientation_main = DisplayOrientation.LANDSCAPE_FLIPPED;
-                    orientation_cast = DisplayOrientation.LANDSCAPE;
+                    orientation_cast = DisplayOrientation.UNKNOWN;
                     break;
 
                 case RotationStates.MODE_MOBILE:
@@ -101,10 +101,10 @@ namespace DisplaySelector
                 default:
                     return;
             }
-            if(orientation_main!= DisplayOrientation.UNKNOWN && orientation_cast != DisplayOrientation.UNKNOWN)
-            {
+           // if(orientation_main!= DisplayOrientation.UNKNOWN && orientation_cast != DisplayOrientation.UNKNOWN)
+           // {
                 SetOrientation(orientation_main, orientation_cast);
-            }
+          //  }
            
         }
 
@@ -126,11 +126,23 @@ namespace DisplaySelector
         static void SetOrientation(DisplayOrientation main,DisplayOrientation cast)
         {
                
-
+              
                adjustScreenSize(ref mainDevice, main);
-               adjustScreenSize(ref remoteDevice, cast);
-               NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
-               NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+              var result= (DISP_CHANGE)NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
+
+            if (cast == DisplayOrientation.UNKNOWN) {
+
+
+                remoteDevice.dmDisplayFlags = (int)DisplayDeviceStateFlags.Disconnect;
+                NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice,0, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+            }
+            else
+            {
+                adjustScreenSize(ref remoteDevice, cast);
+
+                NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+            }
+               
             
 
 
@@ -228,6 +240,7 @@ namespace DisplaySelector
     [Flags()]
     public enum DisplayDeviceStateFlags : int
     {
+       
         /// <summary>The device is part of the desktop.</summary>
         AttachedToDesktop = 0x1,
         MultiDriver = 0x2,
@@ -247,6 +260,7 @@ namespace DisplaySelector
 
     enum DisplaySettingsFlags : int
     {
+        CDS_NONE = 0,
         CDS_UPDATEREGISTRY = 1,
         CDS_TEST = 2,
         CDS_FULLSCREEN = 4,

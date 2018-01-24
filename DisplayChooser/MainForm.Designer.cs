@@ -140,7 +140,6 @@
             // 
             // RotateMainBtn
             // 
-            this.RotateMainBtn.Enabled = false;
             this.RotateMainBtn.Location = new System.Drawing.Point(15, 227);
             this.RotateMainBtn.Name = "RotateMainBtn";
             this.RotateMainBtn.Size = new System.Drawing.Size(140, 23);
@@ -151,7 +150,6 @@
             // 
             // RotateRemoteBtn
             // 
-            this.RotateRemoteBtn.Enabled = false;
             this.RotateRemoteBtn.Location = new System.Drawing.Point(186, 227);
             this.RotateRemoteBtn.Name = "RotateRemoteBtn";
             this.RotateRemoteBtn.Size = new System.Drawing.Size(144, 23);

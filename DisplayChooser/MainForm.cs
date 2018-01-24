@@ -49,13 +49,13 @@ namespace DisplaySelector
         private void ChangeDisplay(object sender, EventArgs e)
         {
            RotationStates state;
-            var button = sender as Button;
+           var button = sender as Button;
            if (button!=null && Enum.TryParse(button.Tag.ToString(),out state))
            {
                 this.displayclient.SetRotationMode((int)state);
                 this.ModeText.Text = button.Text;
                 ScreenRotator.Rotate(state);
-                RotateMainBtn.Enabled = RotateRemoteBtn.Enabled = state == RotationStates.MODE_LAYFLAT;
+               // RotateMainBtn.Enabled = RotateRemoteBtn.Enabled = state == RotationStates.MODE_LAYFLAT;
             
             
            }

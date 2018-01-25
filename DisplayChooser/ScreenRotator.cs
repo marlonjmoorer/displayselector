@@ -1,4 +1,7 @@
-﻿using DisplaySelector.ServiceDisplayMode;
+﻿using CCD;
+using CCD.Enum;
+using CCD.Struct;
+using DisplaySelector.ServiceDisplayMode;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +16,8 @@ namespace DisplaySelector
         static DEVMODE mainDevice;
         static DEVMODE remoteDevice;
         static string remoteDisplayName;
+        static int remoteId;
+        static RotationStates currentState;
 
         static ScreenRotator()
         {
@@ -31,6 +36,7 @@ namespace DisplaySelector
                     {
                         remoteDevice = getDeviceByName(display.DeviceName);
                         remoteDisplayName = display.DeviceName;
+                        remoteId = (int)id;
                         break;
                     }
                 }
@@ -48,7 +54,7 @@ namespace DisplaySelector
             }
             else
             {
-                throw new Exception("Devicenot found");
+                throw new Exception("Device not found");
             }
         }
 
@@ -70,7 +76,7 @@ namespace DisplaySelector
         {
             DisplayOrientation orientation_main= DisplayOrientation.UNKNOWN;
             DisplayOrientation orientation_cast= DisplayOrientation.UNKNOWN;
-
+            currentState = state;
             switch (state)
             {
                 case RotationStates.MODE_LAPTOP:
@@ -93,11 +99,22 @@ namespace DisplaySelector
                     break;
 
                 case RotationStates.MODE_MOBILE:
-                    orientation_main = orientation_cast = DisplayOrientation.PORTRAIT;
+                    orientation_main =DisplayOrientation.PORTRAIT;
+                    orientation_cast = DisplayOrientation.UNKNOWN;
                     break;
 
 
                 case RotationStates.MODE_LAYFLAT:
+                    if (orientation_cast == DisplayOrientation.UNKNOWN)
+                    {
+                        orientation_cast = DisplayOrientation.LANDSCAPE;
+
+                    }
+                    else
+                    {
+                        return;
+                    }
+                    break;
                 default:
                     return;
             }
@@ -123,29 +140,91 @@ namespace DisplaySelector
             NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
         }
         
-        static void SetOrientation(DisplayOrientation main,DisplayOrientation cast)
+        static void SetOrientation(DisplayOrientation main,DisplayOrientation remote)
         {
                
               
-               adjustScreenSize(ref mainDevice, main);
-              var result= (DISP_CHANGE)NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
-
-            if (cast == DisplayOrientation.UNKNOWN) {
-
-
-                remoteDevice.dmDisplayFlags = (int)DisplayDeviceStateFlags.Disconnect;
-                NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice,0, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+            adjustScreenSize(ref mainDevice, main);
+            if (remote == DisplayOrientation.UNKNOWN) {
+                //remoteDevice.dmDisplayFlags = (int)DisplayDeviceStateFlags.Disconnect;
+                DisconnectDisplay(1);
             }
             else
             {
-                adjustScreenSize(ref remoteDevice, cast);
+                adjustScreenSize(ref remoteDevice, remote);
+                adjustScreenPosition(ref remoteDevice);
 
-                NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+               var remote_result= NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
             }
-               
-            
+
+            var result = (DISP_CHANGE)NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
 
 
+
+        }
+
+        private static void adjustScreenPosition(ref DEVMODE deviceMode)
+        {
+           switch (currentState)
+            {
+                case RotationStates.MODE_LAPTOP:
+                case RotationStates.MODE_TENT:
+                    deviceMode.dmPositionX = mainDevice.dmPositionX;
+                    deviceMode.dmPositionY =1-deviceMode.dmPelsHeight;
+                    break;
+                case RotationStates.MODE_BOOK:
+                  //  break;
+                default:
+
+                 deviceMode.dmPositionX = mainDevice.dmPelsWidth;
+                 deviceMode.dmPositionY = mainDevice.dmPositionY;
+                    break;
+
+            }
+
+           
+        }
+
+        public static  void DisconnectDisplay(int displayNumber)
+        {
+            // Get the necessary display information
+            int numPathArrayElements = -1;
+            int numModeInfoArrayElements = -1;
+            StatusCode error = Wrapper.GetDisplayConfigBufferSizes(
+                QueryDisplayFlags.OnlyActivePaths,
+                out numPathArrayElements,
+                out numModeInfoArrayElements);
+
+            DisplayConfigPathInfo[] pathInfoArray = new DisplayConfigPathInfo[numPathArrayElements];
+            DisplayConfigModeInfo[] modeInfoArray = new DisplayConfigModeInfo[numModeInfoArrayElements];
+            error = Wrapper.QueryDisplayConfig(
+                QueryDisplayFlags.OnlyActivePaths,
+                ref numPathArrayElements,
+                pathInfoArray,
+                ref numModeInfoArrayElements,
+                modeInfoArray,
+                IntPtr.Zero);
+            if (error != StatusCode.Success)
+            {
+                // QueryDisplayConfig failed
+            }
+
+            // Check the index
+            if (pathInfoArray[displayNumber].sourceInfo.modeInfoIdx < modeInfoArray.Length)
+            {
+                // Disable and reset the display configuration
+                pathInfoArray[displayNumber].flags = DisplayConfigFlags.Zero;
+                error = Wrapper.SetDisplayConfig(
+                    pathInfoArray.Length,
+                    pathInfoArray,
+                    modeInfoArray.Length,
+                    modeInfoArray,
+                    (SdcFlags.Apply | SdcFlags.AllowChanges | SdcFlags.UseSuppliedDisplayConfig));
+                if (error != StatusCode.Success)
+                {
+                    // SetDisplayConfig failed
+                }
+            }
         }
 
 

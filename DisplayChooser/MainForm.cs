@@ -23,7 +23,17 @@ namespace DisplaySelector
         {
             InitializeComponent();
 
-            RegisterService();
+
+            try
+            {
+                 RegisterService();
+            }catch(Exception e){
+
+                MainForm.Show(null,e);
+                throw e;
+
+            }
+          
 
            
 
@@ -43,6 +53,7 @@ namespace DisplaySelector
 
             this.ModeText.Text = "Laptop";
             this.displayclient.SetRotationMode((int)RotationStates.MODE_LAPTOP);
+            ScreenRotator.Rotate(RotationStates.MODE_LAPTOP);
 
 
         }
@@ -70,6 +81,12 @@ namespace DisplaySelector
         private void RotateRemoteBtn_Click(object sender, EventArgs e)
         {
             ScreenRotator.RotateRemote();
+        }
+
+        public  static void Show(string message,Exception e)
+        {
+            MessageBox.Show(message??e.Message, "Error",
+            MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
     }
 }

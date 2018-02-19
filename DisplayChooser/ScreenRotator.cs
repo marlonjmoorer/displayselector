@@ -4,6 +4,7 @@ using CCD.Struct;
 using DisplaySelector.ServiceDisplayMode;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -131,13 +132,25 @@ namespace DisplaySelector
             DisplayOrientation orientation = (DisplayOrientation)value;
             adjustScreenSize(ref mainDevice, orientation);
             NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
+            //if (IsRemoteDisabled)
+            //{
+            //    DisconnectDisplay(1);
+               
+
+            //}
         }
         public static void RotateRemote()
         {
-            int value = (remoteDevice.dmDisplayOrientation + 1) % 4;
-            DisplayOrientation orientation = (DisplayOrientation)value;
-            adjustScreenSize(ref remoteDevice, orientation);
-            NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+            if (!IsRemoteDisabled)
+            {
+                int value = (remoteDevice.dmDisplayOrientation + 1) % 4;
+                DisplayOrientation orientation = (DisplayOrientation)value;
+                adjustScreenSize(ref remoteDevice, orientation);
+                NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+
+              
+            }
+
         }
         
         static void SetOrientation(DisplayOrientation main,DisplayOrientation remote)
@@ -145,19 +158,33 @@ namespace DisplaySelector
                
               
             adjustScreenSize(ref mainDevice, main);
-            if (remote == DisplayOrientation.UNKNOWN) {
-                //remoteDevice.dmDisplayFlags = (int)DisplayDeviceStateFlags.Disconnect;
-                DisconnectDisplay(1);
+            var result = (DISP_CHANGE)NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
+            if (remote == DisplayOrientation.UNKNOWN)
+            {
+
+                // DisconnectDisplay(1);
+                remoteDevice.dmPositionX = mainDevice.dmPelsWidth*4;
+                remoteDevice.dmPositionY = mainDevice.dmPelsHeight*4;
+                
+               
             }
             else
             {
-                adjustScreenSize(ref remoteDevice, remote);
+
+                if (!IsRemoteDisabled )
+                {
+                   // remoteDevice.dmPelsWidth = mainDevice.dmPelsWidth;
+                   // remoteDevice.dmPelsHeight = mainDevice.dmPelsHeight;
+                  
+                }
                 adjustScreenPosition(ref remoteDevice);
-
-               var remote_result= NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+                adjustScreenSize(ref remoteDevice, remote);
+                
             }
+               var remote_result= NativeMethods.ChangeDisplaySettingsEx(remoteDisplayName, ref remoteDevice, IntPtr.Zero, DisplaySettingsFlags.CDS_UPDATEREGISTRY, IntPtr.Zero);
+            
 
-            var result = (DISP_CHANGE)NativeMethods.ChangeDisplaySettings(ref mainDevice, 1);
+           
 
 
 
@@ -173,11 +200,10 @@ namespace DisplaySelector
                     deviceMode.dmPositionY =1-deviceMode.dmPelsHeight;
                     break;
                 case RotationStates.MODE_BOOK:
-                  //  break;
                 default:
 
-                 deviceMode.dmPositionX = mainDevice.dmPelsWidth;
-                 deviceMode.dmPositionY = mainDevice.dmPositionY;
+                deviceMode.dmPositionX = mainDevice.dmPelsWidth;
+                deviceMode.dmPositionY = mainDevice.dmPositionY;
                     break;
 
             }
@@ -226,11 +252,43 @@ namespace DisplaySelector
                 }
             }
         }
+       
+        public  static void ReconnectDisplays()
+        {
+            try
+            {
+                 DisplayChanger.Start();
+            }
+            catch(Exception e)
+            {
+                MainForm.Show(@"No DisplaySwitch.exe found at  C:\Windows\System32",e);
+            }
+           
+        }
+
+        private static Process DisplayChanger = new Process
+        {
+                    StartInfo =
+            {
+                CreateNoWindow = false,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                FileName = @"DisplaySwitch.exe",
+                Arguments = "/extend"
+            }
+        };
+
+
+        public static bool IsRemoteDisabled
+        {
+            get { return currentState == RotationStates.MODE_MOBILE || currentState == RotationStates.MODE_WEDGE; }
+        }
 
 
 
 
     }
+
+
 
     public class NativeMethods
     {
